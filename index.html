@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css">
+    <title>Dojo Mananger</title>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <img class="logo" src="logo.png" alt="MA">
+            <h1>Dojo Manager</h1>
+        </div>
+            <!-- <p>Sistema de Gerenciamento</p> -->
+        <nav>
+            <ul>
+                <li class="item-nav" id="id-usuario"><a href="#"><i class="fa-solid fa-user-group"></i>Usuários</a></li>
+                <li class="item-nav" id="id-modalidade"><a href="#"><i class="fa-solid fa-table-cells"></i>Modalidades</a></li>
+                <li class="item-nav" id="idmatricula"><a href="#"><i class="fa-solid fa-clipboard-list"></i>Matrículas</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <!-- Seção responsavel por exibir os usuario -->
+        <section id="tela-usuario">
+    <div class="cabecalho-usuario">
+        <span>
+            <h2>Gerenciamento de Usuários</h2>
+            <p>Cadastre e gerencie os alunos da escola</p>
+        </span>
+        <button id="adUsuario" onclick="abrirModal()"><i class="fa-solid fa-plus"> USUÁRIO</i></button>
+    </div>
+
+    <div id="modal-usuario" class="modal-oculto">
+        <div class="conteudo-modal">
+            <div class="cabecalho-modal">
+                <h3>Novo Cadastro de Aluno</h3>
+                <button class="btn-fechar" onclick="fecharModal()">&times;</button>
+            </div>
+            
+            <form id="form-cadastro-usuario">
+                <div class="grupo-input">
+                    <label for="input-nome">Nome:</label>
+                    <input type="text" id="input-nome" placeholder="Nome completo" required>
+                </div>
+                <div class="grupo-input">
+                    <label for="input-email">Email:</label>
+                    <input type="email" id="input-email" placeholder="exemplo@email.com" >
+                </div>
+                <div class="grupo-input">
+                    <label for="input-telefone">Telefone:</label>
+                    <input type="text" id="input-telefone" placeholder="(51) 99999-9999" required>
+                </div>
+                <div class="grupo-input">
+                    <label for="input-data-nasc">Data de Nascimento:</label>
+                    <input type="date" id="input-data-nasc" required>
+                </div>
+                <div class="grupo-input-radio">
+                <label>Tipo de Usuário:</label>
+                <div class="opcoes-radio">
+                    <label for="radio-aluno">
+                        <input type="radio" id="radio-aluno" name="tipo_usuario" value="aluno" checked>
+                        Aluno
+                    </label>
+                    
+                    <label for="radio-professor">
+                        <input type="radio" id="radio-professor" name="tipo_usuario" value="professor">
+                        Professor
+                    </label>
+                 </div>
+                </div>
+                <button type="submit" class="btn-salvar">Salvar Cadastro</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="lista-usuarios">
+        </div>
+</section>
+        <!-- Seção de modalidades -->
+        <section id="tela-modalidade" class="secao-oculta">
+                <h2>Gerenciamento das modalidade</h2>
+                <div id="lista-moadalidades">
+                    <!-- A lista de modalidades será carregada aqui -->
+                </div>
+        </section>
+        <!-- Seção responsavel por exibir relação de alunos,modalidade e professores -->
+        <section id="tela-matricula" class="secao-oculta">
+                <h2>Gerenciamento de matriculas</h2>
+                <div id="lista-matriculas">
+                    <!-- A lista de usuários, professores e modalidades será carregada aqui -->
+                </div>
+        </section>
+
+    </main>
+    <!-- <footer>
+        <p>&copy; 2026 Dojo Manager. Todos os direitos reservados.</p>
+    </footer> -->
+    <script src="app.js"></script>
+</body>
+</html>
