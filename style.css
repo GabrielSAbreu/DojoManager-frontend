@@ -157,7 +157,7 @@ nav{
     margin: 0;
 }
 
-.btn-fechar {
+.btn-fechar, .btn-editar {
     background: none;
     border: none;
     color: #fff;
@@ -165,12 +165,22 @@ nav{
     cursor: pointer;
 }
 
-.btn-fechar:hover {
+.btn-fechar:hover, .btn-editar:hover {
     color: #FFD700;
 }
-.btn-deletar{
+.btn-deletar, .btn-editar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: fit-content;
     width: fit-content;
     padding: 0;
+    color: #000;
     background-color: #fff;
+}
+
+.icone-padrao{
+    font-size: 1rem;
+    margin-right: 10px;
+    color:#000;
 }

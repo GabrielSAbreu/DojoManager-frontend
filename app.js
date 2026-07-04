@@ -7,27 +7,21 @@ const API_URL = 'http://127.0.0.1:8000';
   --------------------------------------------------------------------------------------
 */
 function navegarPara(idDaTela) {
-    // Seleciona todas as seções dentro do <main>
     const secoes = document.querySelectorAll('main section');
-    
-    // Oculta todas as seções adicionando a classe utilitária
     secoes.forEach(secao => {
         secao.classList.add('secao-oculta');
     });
     
-    // Mostra apenas a seção solicitada
     const telaAtiva = document.getElementById(idDaTela);
     if (telaAtiva) {
         telaAtiva.classList.remove('secao-oculta');
     }
 
-    // Carrega os dados específicos da tela que acabou de ficar ativa
     if (idDaTela === 'tela-usuario') renderizarTabelaUsuarios();
     if (idDaTela === 'tela-modalidade') renderizarTabelaModalidades();
     if (idDaTela === 'tela-matricula') renderizarTabelaMatrículas();
 }
 
-// Atribui os eventos de clique aos botões do menu do seu HTML
 document.getElementById('id-usuario').addEventListener('click', () => navegarPara('tela-usuario'));
 document.getElementById('id-modalidade').addEventListener('click', () => navegarPara('tela-modalidade'));
 document.getElementById('idmatricula').addEventListener('click', () => navegarPara('tela-matricula'));
@@ -83,34 +77,24 @@ const renderizarTabelaUsuarios = async () => {
         return;
     }
 
-    // Monta a estrutura do card
-    let html = `
-            <div class="container-usuario">
+    let html = `<div class="container-usuario">`;
 
-    `;
-
-    // Alimenta os dados dos usuários dentro do card
     usuarios.forEach(user => {
-        let email 
-        if (user.email === null) {
-            email ='Não informado'
-        } else {
-            email = user.email
-    }
         html += `
-            
-                <div class="card-usuario">
+            <div class="card-usuario">
                 <div class="conteudo-card">
                     <h3>${user.nome}</h3>
-                    <p><i class="fa-solid fa-envelope"></i> ${user.email}</p>
+                    <p><i class="fa-solid fa-envelope"></i> ${user.email || 'Não informado'}</p>
                     <p><i class="fa-solid fa-phone"></i> ${user.telefone}</p>
                     <p class="tag-tipo">${user.tipo_usuario}</p>
                 </div>
+                <button class="btn-editar" onclick="editarUsuario(${user.id_usuario})">
+                    <i class="fa-regular fa-fw fa-pen-to-square icone-padrao"></i>
+                </button>
                 <button class="btn-deletar" onclick="deletarUsuario(${user.id_usuario})">
-                    <i class="fa-solid fa-trash-can"></i>
+                    <i class="fa-solid fa-fw fa-trash-can icone-padrao"></i>
                 </button>
             </div>
-            
         `;
     });
 
@@ -174,13 +158,10 @@ const renderizarTabelaMatrículas = async () => {
                 </tr>
             </thead>
             <tbody>
-            
     `;
 
-    //Formata a data de início da matrícula para o padrão brasileiro (dd/mm/yyyy)
     matriculas.forEach(mat => {
         const dataFormatada = new Date(mat.data_inicio).toLocaleDateString('pt-BR');
-        
         html += `
             <tr>
                 <td><strong>${mat.usuario.nome}</strong></td>
@@ -196,92 +177,112 @@ const renderizarTabelaMatrículas = async () => {
 
 /*
   --------------------------------------------------------------------------------------
-  Controle do Modal de Cadastro
+  4. CONTROLE DO MODAL DE CADASTRO
   --------------------------------------------------------------------------------------
 */
 function abrirModal() {
     const modal = document.getElementById('modal-usuario');
-    modal.classList.remove('modal-oculto'); // Remove o disfarce e exibe o modal
+    modal.classList.remove('modal-oculto');
+
+    // Ao abrir normalmente via botão "+", o form assume comportamento de CADASTRO (POST)
+    const form = document.getElementById('form-cadastro-usuario');
+    form.onsubmit = async (event) => {
+        event.preventDefault();
+        await executarCadastro();
+    };
 }
 
 function fecharModal() {
     const modal = document.getElementById('modal-usuario');
-    modal.classList.add('modal-oculto'); // Adiciona a classe que esconde o modal
+    modal.classList.add('modal-oculto');
     
-    // Boa prática: limpa o formulário caso o usuário feche sem salvar
-    document.getElementById('form-cadastro-usuario').reset();
+    const form = document.getElementById('form-cadastro-usuario');
+    form.reset();
+    form.onsubmit = null; // Remove a função associada para evitar lixo em memória
 }
+
 /*
 ---------------------------------------------------------------------------------------
-METÓDOS PARA CADASTRAMENTO / INSERÇÃO DE DADOS
+  5. OPERAÇÕES DE SALVAMENTO DE DADOS (Alinhadas ao SRP / SOLID)
 ---------------------------------------------------------------------------------------
-
 */
-document.getElementById('form-cadastro-usuario')?.addEventListener('submit', async (event) =>{
-    event.preventDefault()
 
-    const nomeInserido = document.getElementById('input-nome').value;
-    const emailInserido = document.getElementById('input-email').value;
-    const telefoneInserido = document.getElementById('input-telefone').value;
-    const dataNascimentoInserido = document.getElementById('input-data-nasc').value
-    const tipoUsuarioInserido = document.querySelector('input[name="tipo_usuario"]:checked').value
-
-    const novoUsuario = {
-        nome: nomeInserido,
-        email: emailInserido,
-        telefone: telefoneInserido,
-        tipo_usuario: tipoUsuarioInserido,
-        data_nascimento: dataNascimentoInserido
+// Função pura para extrair e organizar os valores dos inputs do formulário
+function obterDadosDoFormulario() {
+    return {
+        nome: document.getElementById('input-nome').value,
+        email: document.getElementById('input-email').value,
+        telefone: document.getElementById('input-telefone').value,
+        tipo_usuario: document.querySelector('input[name="tipo_usuario"]:checked').value.toLowerCase(),
+        data_nascimento: document.getElementById('input-data-nasc').value
     };
+}
 
-    try{
-        const response = await fetch (`${API_URL}/usuarios`,{
+// Responsabilidade Única: Tratar exclusivamente da criação do recurso
+async function executarCadastro() {
+    const novoUsuario = obterDadosDoFormulario();
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios`, {
             method: 'POST',
-            headers:{
-                'Content-Type':'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(novoUsuario)
         });
-        if (response.ok){
-            alert('Usuário cadastrado com sucesso!')
+
+        if (response.ok) {
+            alert('Usuário cadastrado com sucesso!');
             fecharModal();
             renderizarTabelaUsuarios();
-        }else{
+        } else {
             const erroApi = await response.json();
             alert(`Erro no cadastro: ${erroApi.detail || 'Verifique as informações.'}`);
         }
-
-    }catch (error) {
+    } catch (error) {
         console.error('Erro ao realizar o POST:', error);
         alert('Não foi possível conectar ao servidor back-end.');
     }
-});
+}
 
-/*
-  --------------------------------------------------------------------------------------
-  4. INICIALIZAÇÃO DO SISTEMA
-  --------------------------------------------------------------------------------------
-*/
-// Quando a página abre, carrega por padrão a tela de usuários
-navegarPara('tela-usuario');
-
-/*
---------------------------------------------------------------------------------------
-  5. DELEÇÃO DE USUÁRIOS
-  --------------------------------------------------------------------------------------
-*/
-async function deletarUsuario(id_usuario) {
-    if (!confirm('Tem certeza que deseja deletar este usuário?')) {
-        return; // Sai da função se o usuário cancelar a ação
-    }
+// Responsabilidade Única: Tratar exclusivamente da atualização do recurso
+async function executarEdicao(id_usuario) {
+    const usuarioAtualizado = obterDadosDoFormulario();
 
     try {
         const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, {
-            method: 'DELETE'
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(usuarioAtualizado)
         });
+
+        if (response.ok) {
+            alert('Usuário atualizado com sucesso!');
+            fecharModal();
+            renderizarTabelaUsuarios();
+        } else {
+            const erroApi = await response.json();
+            alert(`Erro ao atualizar usuário: ${erroApi.detail || 'Verifique as informações.'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao realizar o PUT:', error);
+        alert('Não foi possível conectar ao servidor back-end.');
+    }
+}
+
+/*
+--------------------------------------------------------------------------------------
+  6. REMOÇÃO E EDIÇÃO (Gatilhadores de Interface)
+--------------------------------------------------------------------------------------
+*/
+async function deletarUsuario(id_usuario) {
+    if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, { method: 'DELETE' });
         if (response.ok) {
             alert('Usuário deletado com sucesso!');
-            renderizarTabelaUsuarios(); // Atualiza a tabela após a exclusão
+            renderizarTabelaUsuarios();
         } else {
             const erroApi = await response.json();
             alert(`Erro ao deletar usuário: ${erroApi.detail || 'Verifique as informações.'}`);
@@ -291,3 +292,40 @@ async function deletarUsuario(id_usuario) {
         alert('Não foi possível conectar ao servidor back-end.');
     }
 }
+
+async function editarUsuario(id_usuario) {
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, { method: 'GET' });
+        if (!response.ok) throw new Error('Erro ao buscar usuário para edição.');
+        
+        const usuario = await response.json();
+
+        // Alimenta o formulário visual
+        document.getElementById('input-nome').value = usuario.nome;
+        document.getElementById('input-email').value = usuario.email || '';
+        document.getElementById('input-telefone').value = usuario.telefone || '';
+        document.getElementById('input-data-nasc').value = usuario.data_nascimento || '';
+        document.querySelector(`input[name="tipo_usuario"][value="${usuario.tipo_usuario}"]`).checked = true;
+
+        // Exibe o modal de forma direta
+        document.getElementById('modal-usuario').classList.remove('modal-oculto');
+
+        // Configura dinamicamente o gatilho do submit para executar o PUT
+        const form = document.getElementById('form-cadastro-usuario');
+        form.onsubmit = async (event) => {
+            event.preventDefault();
+            await executarEdicao(id_usuario);
+        };
+
+    } catch (error) {
+        console.error('Erro ao buscar usuário para edição:', error);
+        alert('Não foi possível buscar os dados do usuário.');
+    }
+}
+
+/*
+  --------------------------------------------------------------------------------------
+  7. INICIALIZAÇÃO DO SISTEMA
+  --------------------------------------------------------------------------------------
+*/
+navegarPara('tela-usuario');
