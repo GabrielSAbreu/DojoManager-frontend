@@ -13,12 +13,11 @@
             <img class="logo" src="logo.png" alt="MA">
             <h1>Dojo Manager</h1>
         </div>
-            <!-- <p>Sistema de Gerenciamento</p> -->
         <nav>
             <ul>
-                <li class="item-nav" id="id-usuario"><a href="#"><i class="fa-solid fa-user-group"></i>Usuários</a></li>
-                <li class="item-nav" id="id-modalidade"><a href="#"><i class="fa-solid fa-table-cells"></i>Modalidades</a></li>
-                <li class="item-nav" id="idmatricula"><a href="#"><i class="fa-solid fa-clipboard-list"></i>Matrículas</a></li>
+                <li class="item-nav" id="id-usuario" data-target="tela-usuario"><a href="#"><i class="fa-solid fa-user-group"></i>Usuários</a></li>
+                <li class="item-nav" id="id-modalidade" data-target="tela-modalidade"><a href="#"><i class="fa-solid fa-table-cells"></i>Modalidades</a></li>
+                <li class="item-nav" id="id-matricula" data-target="tela-matricula"><a href="#"><i class="fa-solid fa-clipboard-list"></i>Matrículas</a></li>
             </ul>
         </nav>
     </header>
@@ -30,17 +29,17 @@
             <h2>Gerenciamento de Usuários</h2>
             <p>Cadastre e gerencie os alunos da escola</p>
         </span>
-        <button id="adUsuario" onclick="abrirModal()"><i class="fa-solid fa-plus"> USUÁRIO</i></button>
+        <button id="adUsuario" onclick="abrirModal()"><i class="fa-solid fa-plus"></i><span class="btn-label">USUÁRIO</span></button>
     </div>
 
     <div id="modal-usuario" class="modal-oculto">
         <div class="conteudo-modal">
             <div class="cabecalho-modal">
                 <h3>Novo Cadastro de Aluno</h3>
-                <button class="btn-fechar" onclick="fecharModal()">&times;</button>
+                <button class="btn-fechar" onclick="fecharModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <form id="form-cadastro-usuario">
+            <form id="form-cadastro-usuario" class="form-padrao">
                 <div class="grupo-input">
                     <label for="input-nome">Nome:</label>
                     <input type="text" id="input-nome" placeholder="Nome completo" required>
@@ -81,17 +80,87 @@
 </section>
         <!-- Seção de modalidades -->
         <section id="tela-modalidade" class="secao-oculta">
-                <h2>Gerenciamento das modalidade</h2>
-                <div id="lista-moadalidades">
-                    <!-- A lista de modalidades será carregada aqui -->
+            <div class="cabecalho-usuario">
+                <span>
+                    <h2>Gerenciamento das Modalidades</h2>
+                    <p>Cadastre e gerencie as modalidades oferecidas</p>
+                </span>
+                <button id="adModalidade" onclick="abrirModalModalidade()"><i class="fa-solid fa-plus"></i><span class="btn-label">MODALIDADE</span></button>
+            </div>
+            <div id="lista-modalidades">
+                <!-- A lista de modalidades será carregada aqui -->
+            </div>
+            <!-- Modal de Modalidades -->
+            <div id="modal-modalidade" class="modal-overlay modal-oculto">
+                <div class="conteudo-modal">
+                    <div class="cabecalho-modal">
+                        <h3>Cadastro de Modalidade</h3>
+                        <button class="btn-fechar" onclick="fecharModalModalidade()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h2>Formulário de Modalidade</h2>
+                    <form id="form-cadastro-modalidade" class="form-padrao">
+                        <div class="campo">
+                            <label for="input-nome-modalidade">Nome da Modalidade:</label>
+                            <input type="text" id="input-nome-modalidade" required placeholder="Ex: Judô, Jiu-Jitsu">
+                        </div>
+                        <button type="submit" class="btn-salvar">Salvar Modalidade</button>
+                    </form>
                 </div>
+            </div>
         </section>
         <!-- Seção responsavel por exibir relação de alunos,modalidade e professores -->
         <section id="tela-matricula" class="secao-oculta">
-                <h2>Gerenciamento de matriculas</h2>
-                <div id="lista-matriculas">
-                    <!-- A lista de usuários, professores e modalidades será carregada aqui -->
+            <div class="cabecalho-usuario">
+                <span>
+                    <h2>Gerenciamento de Matrículas</h2>
+                    <p>Vincule alunos ou professores às modalidades</p>
+                </span>
+                <button id="adMatricula" onclick="abrirModalMatricula()"><i class="fa-solid fa-plus"></i><span class="btn-label">MATRÍCULA</span></button>
+            </div>
+            <div id="lista-matriculas">
+                <!-- A lista de usuários, professores e modalidades será carregada aqui -->
+            </div>
+            <div id="modal-matricula" class="modal-overlay modal-oculto">
+                <div class="conteudo-modal">
+                    <div class="cabecalho-modal">
+                        <h3>Cadastro de Matrícula</h3>
+                        <button class="btn-fechar" onclick="fecharModalMatricula()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h2>Registrar Nova Matrícula</h2>
+                    <form id="form-cadastro-matricula" class="form-padrao">
+            
+            <!-- Input 1: Seleção do Tipo de Vínculo (Alunos ou Professores) -->
+            <div class="campo">
+                <label>Vincular Tipo de Usuário:</label>
+                <div class="container-radios">
+                    <input type="radio" id="tipo-busca-aluno" name="filtro_tipo_usuario" value="aluno" checked>
+                    <label for="tipo-busca-aluno">Alunos</label>
+                    
+                    <input type="radio" id="tipo-busca-professor" name="filtro_tipo_usuario" value="professor">
+                    <label for="tipo-busca-professor">Professores</label>
                 </div>
+            </div>
+
+            <!-- Input 2: Lista de Pessoas Dinâmica -->
+            <div class="campo">
+                <label for="select-usuario-matricula">Selecione a Pessoa:</label>
+                <select id="select-usuario-matricula" required>
+                    <option value="">Selecione o tipo acima primeiro...</option>
+                </select>
+            </div>
+
+            <!-- Input 3: Lista de Modalidades -->
+            <div class="campo">
+                <label for="select-modalidade-matricula">Selecione a Modalidade:</label>
+                <select id="select-modalidade-matricula" required>
+                    <option value="">Carregando modalidades...</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-salvar">Confirmar Matrícula</button>
+        </form>
+    </div>
+</div>
         </section>
 
     </main>

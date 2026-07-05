@@ -6,15 +6,33 @@ const API_URL = 'http://127.0.0.1:8000';
   1. SISTEMA DE ROTEAMENTO (Alternar visibilidade das telas)
   --------------------------------------------------------------------------------------
 */
+function fecharTodosModais() {
+    fecharModal();
+    fecharModalModalidade();
+    fecharModalMatricula();
+}
+
 function navegarPara(idDaTela) {
+    fecharTodosModais();
+
     const secoes = document.querySelectorAll('main section');
     secoes.forEach(secao => {
         secao.classList.add('secao-oculta');
     });
-    
+
     const telaAtiva = document.getElementById(idDaTela);
     if (telaAtiva) {
         telaAtiva.classList.remove('secao-oculta');
+    }
+
+    document.querySelectorAll('.item-nav').forEach(item => {
+        item.classList.remove('item-nav-ativo');
+    });
+
+    const itemAtivo = document.querySelector(`.item-nav[data-target="${idDaTela}"]`);
+
+    if (itemAtivo) {
+        itemAtivo.classList.add('item-nav-ativo');
     }
 
     if (idDaTela === 'tela-usuario') renderizarTabelaUsuarios();
@@ -24,7 +42,7 @@ function navegarPara(idDaTela) {
 
 document.getElementById('id-usuario').addEventListener('click', () => navegarPara('tela-usuario'));
 document.getElementById('id-modalidade').addEventListener('click', () => navegarPara('tela-modalidade'));
-document.getElementById('idmatricula').addEventListener('click', () => navegarPara('tela-matricula'));
+document.getElementById('id-matricula').addEventListener('click', () => navegarPara('tela-matricula'));
 
 /*
   --------------------------------------------------------------------------------------
@@ -63,7 +81,7 @@ const fetchMatriculas = async () => {
 
 /*
   --------------------------------------------------------------------------------------
-  3. FUNÇÕES DE RENDERIZAÇÃO (Construir as tabelas dinamicamente)
+  3. FUNÇÕES DE RENDERIZAÇÃO 
   --------------------------------------------------------------------------------------
 */
 const renderizarTabelaUsuarios = async () => {
@@ -88,12 +106,14 @@ const renderizarTabelaUsuarios = async () => {
                     <p><i class="fa-solid fa-phone"></i> ${user.telefone}</p>
                     <p class="tag-tipo">${user.tipo_usuario}</p>
                 </div>
-                <button class="btn-editar" onclick="editarUsuario(${user.id_usuario})">
-                    <i class="fa-regular fa-fw fa-pen-to-square icone-padrao"></i>
-                </button>
-                <button class="btn-deletar" onclick="deletarUsuario(${user.id_usuario})">
-                    <i class="fa-solid fa-fw fa-trash-can icone-padrao"></i>
-                </button>
+                <div class="card-actions">
+                    <button class="btn-editar" onclick="editarUsuario(${user.id_usuario})">
+                        <i class="fa-regular fa-fw fa-pen-to-square icone-padrao"></i>
+                    </button>
+                    <button class="btn-deletar" onclick="deletarUsuario(${user.id_usuario})">
+                        <i class="fa-solid fa-fw fa-trash-can icone-padrao"></i>
+                    </button>
+                </div>
             </div>
         `;
     });
@@ -103,7 +123,7 @@ const renderizarTabelaUsuarios = async () => {
 };
 
 const renderizarTabelaModalidades = async () => {
-    const container = document.getElementById('lista-moadalidades'); 
+    const container = document.getElementById('lista-modalidades'); 
     container.innerHTML = '<p>Carregando modalidades...</p>';
     
     const modalidades = await fetchModalidades();
@@ -119,6 +139,7 @@ const renderizarTabelaModalidades = async () => {
                 <tr>
                     <th>ID</th>
                     <th>Nome da Modalidade</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,7 +149,15 @@ const renderizarTabelaModalidades = async () => {
         html += `
             <tr>
                 <td>${mod.id_modalidade}</td>
-                <td>${mod.nome_modalidade}</td>
+                <td><strong>${mod.nome_modalidade}</strong></td>
+                <td>
+                    <button class="btn-editar-tabela" onclick="editarModalidade(${mod.id_modalidade})">
+                        <i class="fa-regular fa-pen-to-square icone-padrao"></i>
+                    </button>
+                    <button class="btn-deletar-tabela" onclick="deletarModalidade(${mod.id_modalidade})">
+                        <i class="fa-solid fa-trash-can icone-padrao"></i>
+                    </button>
+                </td>
             </tr>
         `;
     });
@@ -152,9 +181,8 @@ const renderizarTabelaMatrículas = async () => {
         <table class="tabela-dojo">
             <thead>
                 <tr>
-                    <th>Aluno</th>
+                    <th>Pessoa</th>
                     <th>Modalidade</th>
-                    <th>Data de Início</th>
                 </tr>
             </thead>
             <tbody>
@@ -166,7 +194,6 @@ const renderizarTabelaMatrículas = async () => {
             <tr>
                 <td><strong>${mat.usuario.nome}</strong></td>
                 <td>${mat.modalidade.nome_modalidade}</td>
-                <td>${dataFormatada}</td>
             </tr>
         `;
     });
@@ -177,14 +204,13 @@ const renderizarTabelaMatrículas = async () => {
 
 /*
   --------------------------------------------------------------------------------------
-  4. CONTROLE DO MODAL DE CADASTRO
+  4. CONTROLE DOS MODAIS
   --------------------------------------------------------------------------------------
 */
 function abrirModal() {
     const modal = document.getElementById('modal-usuario');
     modal.classList.remove('modal-oculto');
 
-    // Ao abrir normalmente via botão "+", o form assume comportamento de CADASTRO (POST)
     const form = document.getElementById('form-cadastro-usuario');
     form.onsubmit = async (event) => {
         event.preventDefault();
@@ -198,16 +224,109 @@ function fecharModal() {
     
     const form = document.getElementById('form-cadastro-usuario');
     form.reset();
-    form.onsubmit = null; // Remove a função associada para evitar lixo em memória
+    form.onsubmit = null;
+}
+
+function abrirModalModalidade() {
+    const modal = document.getElementById('modal-modalidade');
+    modal.classList.remove('modal-oculto');
+
+    const form = document.getElementById('form-cadastro-modalidade');
+    form.onsubmit = async (event) => {
+        event.preventDefault();
+        await executarCadastroModalidade();
+    };
+}
+
+function fecharModalModalidade() {
+    const modal = document.getElementById('modal-modalidade');
+    modal.classList.add('modal-oculto');
+    
+    const form = document.getElementById('form-cadastro-modalidade');
+    form.reset();
+    form.onsubmit = null;
+}
+
+// Controle do Modal de Matrícula (Comportamento igual aos anteriores)
+function abrirModalMatricula() {
+    const modal = document.getElementById('modal-matricula');
+    modal.classList.remove('modal-oculto');
+
+    // Inicializa carregando os selects dinamicamente ao abrir
+    atualizarSelectUsuariosPorTipo();
+    carregarModalidadesNoSelect();
+
+    const form = document.getElementById('form-cadastro-matricula');
+    form.onsubmit = async (event) => {
+        event.preventDefault();
+        await executarCadastroMatricula();
+    };
+}
+
+function fecharModalMatricula() {
+    const modal = document.getElementById('modal-matricula');
+    modal.classList.add('modal-oculto');
+    
+    const form = document.getElementById('form-cadastro-matricula');
+    form.reset();
+    form.onsubmit = null;
+}
+
+/*
+  --------------------------------------------------------------------------------------
+  4.1 LÓGICA DE FILTROS DINÂMICOS PARA SELEÇÃO DA MATRÍCULA
+  --------------------------------------------------------------------------------------
+*/
+async function atualizarSelectUsuariosPorTipo() {
+    const selectPessoa = document.getElementById('select-usuario-matricula');
+    selectPessoa.innerHTML = '<option value="">Carregando...</option>';
+
+    // Pega o valor do botão de rádio selecionado (aluno ou professor)
+    const tipoSelecionado = document.querySelector('input[name="filtro_tipo_usuario"]:checked').value;
+    
+    // Busca a lista completa do back-end
+    const todosUsuarios = await fetchUsuarios();
+
+    // Filtra para bater com o tipo selecionado pelo usuário
+    const usuariosFiltrados = todosUsuarios.filter(user => user.tipo_usuario.toLowerCase() === tipoSelecionado.toLowerCase());
+
+    if (usuariosFiltrados.length === 0) {
+        selectPessoa.innerHTML = `<option value="">Nenhum ${tipoSelecionado} cadastrado</option>`;
+        return;
+    }
+
+    let options = `<option value="">Selecione o ${tipoSelecionado}...</option>`;
+    usuariosFiltrados.forEach(user => {
+        options += `<option value="${user.id_usuario}">${user.nome}</option>`;
+    });
+    
+    selectPessoa.innerHTML = options;
+}
+
+async function carregarModalidadesNoSelect() {
+    const selectMod = document.getElementById('select-modalidade-matricula');
+    selectMod.innerHTML = '<option value="">Carregando...</option>';
+
+    const modalidades = await fetchModalidades();
+
+    if (modalidades.length === 0) {
+        selectMod.innerHTML = '<option value="">Nenhuma modalidade disponível</option>';
+        return;
+    }
+
+    let options = '<option value="">Selecione uma modalidade...</option>';
+    modalidades.forEach(mod => {
+        options += `<option value="${mod.id_modalidade}">${mod.nome_modalidade}</option>`;
+    });
+
+    selectMod.innerHTML = options;
 }
 
 /*
 ---------------------------------------------------------------------------------------
-  5. OPERAÇÕES DE SALVAMENTO DE DADOS (Alinhadas ao SRP / SOLID)
+  5. OPERAÇÕES DE SALVAMENTO DE USUÁRIOS
 ---------------------------------------------------------------------------------------
 */
-
-// Função pura para extrair e organizar os valores dos inputs do formulário
 function obterDadosDoFormulario() {
     return {
         nome: document.getElementById('input-nome').value,
@@ -218,10 +337,8 @@ function obterDadosDoFormulario() {
     };
 }
 
-// Responsabilidade Única: Tratar exclusivamente da criação do recurso
 async function executarCadastro() {
     const novoUsuario = obterDadosDoFormulario();
-
     try {
         const response = await fetch(`${API_URL}/usuarios`, {
             method: 'POST',
@@ -243,10 +360,8 @@ async function executarCadastro() {
     }
 }
 
-// Responsabilidade Única: Tratar exclusivamente da atualização do recurso
 async function executarEdicao(id_usuario) {
     const usuarioAtualizado = obterDadosDoFormulario();
-
     try {
         const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, {
             method: 'PUT',
@@ -255,7 +370,7 @@ async function executarEdicao(id_usuario) {
         });
 
         if (response.ok) {
-            alert('Usuário atualizado com sucesso!');
+            alert('Usuário atualizado com sucesso com sucesso!');
             fecharModal();
             renderizarTabelaUsuarios();
         } else {
@@ -269,15 +384,104 @@ async function executarEdicao(id_usuario) {
 }
 
 /*
+---------------------------------------------------------------------------------------
+  6. OPERAÇÕES DE SALVAMENTO DE MODALIDADES 
+---------------------------------------------------------------------------------------
+*/
+function obterDadosDaModalidade() {
+    return {
+        nome_modalidade: document.getElementById('input-nome-modalidade').value
+    };
+}
+
+async function executarCadastroModalidade() {
+    const novaModalidade = obterDadosDaModalidade();
+    try {
+        const response = await fetch(`${API_URL}/modalidades`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novaModalidade)
+        });
+
+        if (response.ok) {
+            alert('Modalidade cadastrada com sucesso!');
+            fecharModalModalidade();
+            renderizarTabelaModalidades();
+        } else {
+            const erroApi = await response.json();
+            alert(`Erro no cadastro: ${erroApi.detail || 'Verifique as informações.'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao realizar o POST de modalidade:', error);
+        alert('Não foi possível conectar ao servidor.');
+    }
+}
+
+async function executarEdicaoModalidade(id_modalidade) {
+    const modalidadeAtualizada = obterDadosDaModalidade();
+    try {
+        const response = await fetch(`${API_URL}/modalidades/${id_modalidade}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(modalidadeAtualizada)
+        });
+
+        if (response.ok) {
+            alert('Modalidade actualizada com sucesso!');
+            fecharModalModalidade();
+            renderizarTabelaModalidades();
+        } else {
+            const erroApi = await response.json();
+            alert(`Erro ao atualizar: ${erroApi.detail || 'Verifique as informações.'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao realizar o PUT de modalidade:', error);
+        alert('Não foi possível conectar ao servidor.');
+    }
+}
+
+/*
+---------------------------------------------------------------------------------------
+  6.1 OPERAÇÕES DE SALVAMENTO DE MATRÍCULAS 
+---------------------------------------------------------------------------------------
+*/
+function obterDadosDaMatricula() {
+    return {
+        fk_usuario_id_usuario: parseInt(document.getElementById('select-usuario-matricula').value),
+        fk_modalidade_id: parseInt(document.getElementById('select-modalidade-matricula').value)
+    };
+}
+
+async function executarCadastroMatricula() {
+    const novaMatricula = obterDadosDaMatricula();
+    try {
+        const response = await fetch(`${API_URL}/praticas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novaMatricula)
+        });
+
+        if (response.ok) {
+            alert('Matrícula realizada com sucesso!');
+            fecharModalMatricula();
+            renderizarTabelaMatrículas();
+        } else {
+            const erroApi = await response.json();
+            alert(`Erro na matrícula: ${erroApi.detail || 'Verifique os dados.'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao realizar o POST de matrícula:', error);
+        alert('Não foi possível registrar a matrícula.');
+    }
+}
+
+/*
 --------------------------------------------------------------------------------------
-  6. REMOÇÃO E EDIÇÃO (Gatilhadores de Interface)
+  7. Ações de Deleção e Edição
 --------------------------------------------------------------------------------------
 */
 async function deletarUsuario(id_usuario) {
-    if (!confirm('Tem certeza que deseja deletar este usuário?')) {
-        return;
-    }
-
+    if (!confirm('Tem certeza que deseja deletar este usuário?')) return;
     try {
         const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, { method: 'DELETE' });
         if (response.ok) {
@@ -300,32 +504,72 @@ async function editarUsuario(id_usuario) {
         
         const usuario = await response.json();
 
-        // Alimenta o formulário visual
         document.getElementById('input-nome').value = usuario.nome;
         document.getElementById('input-email').value = usuario.email || '';
         document.getElementById('input-telefone').value = usuario.telefone || '';
         document.getElementById('input-data-nasc').value = usuario.data_nascimento || '';
         document.querySelector(`input[name="tipo_usuario"][value="${usuario.tipo_usuario}"]`).checked = true;
 
-        // Exibe o modal de forma direta
         document.getElementById('modal-usuario').classList.remove('modal-oculto');
 
-        // Configura dinamicamente o gatilho do submit para executar o PUT
         const form = document.getElementById('form-cadastro-usuario');
         form.onsubmit = async (event) => {
             event.preventDefault();
             await executarEdicao(id_usuario);
         };
-
     } catch (error) {
         console.error('Erro ao buscar usuário para edição:', error);
         alert('Não foi possível buscar os dados do usuário.');
     }
 }
 
+async function deletarModalidade(id_modalidade) {
+    if (!confirm('Tem certeza que deseja deletar esta modalidade?')) return;
+    try {
+        const response = await fetch(`${API_URL}/modalidades/${id_modalidade}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Modalidade deletada com sucesso!');
+            renderizarTabelaModalidades();
+        } else {
+            const erroApi = await response.json();
+            alert(`Erro ao deletar: ${erroApi.detail || 'Verifique se existem matrículas vinculadas.'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao deletar modalidade:', error);
+        alert('Erro ao conectar com o back-end.');
+    }
+}
+
+async function editarModalidade(id_modalidade) {
+    try {
+        const response = await fetch(`${API_URL}/modalidades/${id_modalidade}`, { method: 'GET' });
+        if (!response.ok) throw new Error('Erro ao buscar modalidade.');
+        
+        const mod = await response.json();
+        document.getElementById('input-nome-modalidade').value = mod.nome_modalidade;
+
+        document.getElementById('modal-modalidade').classList.remove('modal-oculto');
+
+        const form = document.getElementById('form-cadastro-modalidade');
+        form.onsubmit = async (event) => {
+            event.preventDefault();
+            await executarEdicaoModalidade(id_modalidade);
+        };
+    } catch (error) {
+        console.error('Erro ao carregar dados para edição:', error);
+        alert('Não foi possível carregar os dados da modalidade.');
+    }
+}
+
 /*
   --------------------------------------------------------------------------------------
-  7. INICIALIZAÇÃO DO SISTEMA
+  8. INICIALIZAÇÃO DO SISTEMA E OUVINTES DE EVENTOS
   --------------------------------------------------------------------------------------
 */
+// Configura a escuta reativa da mudança dos botões de rádio do modal de matrícula
+document.querySelectorAll('input[name="filtro_tipo_usuario"]').forEach(radio => {
+    radio.addEventListener('change', atualizarSelectUsuariosPorTipo);
+});
+
+// Define a tela padrão inicial
 navegarPara('tela-usuario');
